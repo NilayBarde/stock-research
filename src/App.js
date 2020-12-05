@@ -10,16 +10,19 @@ class App extends React.Component {
     super(props);
 
     this.state = {
-      allStocks: []
+      allStocks: [],
+      stockSymbol: null,
     };
   }
 
   listifyStocks(stocksList) {
-    var symbolList = [];
+    var companyList = [];
     for(var company of stocksList) {
-      symbolList.push(company.symbol)
+      if (company.type === "EQS") {
+        companyList.push(company.description + " - " + company.symbol);
+      }
     }
-    return symbolList;
+    return companyList;
 
   }
 
@@ -29,7 +32,6 @@ class App extends React.Component {
       .then(
         (result) => {
           var stockSymbolList = this.listifyStocks(result);
-          console.log(stockSymbolList);
           this.setState({
             allStocks: stockSymbolList,
           });
@@ -50,12 +52,12 @@ class App extends React.Component {
   //   api_key.apiKey = "sandbox_bv5814v48v6qnlld0dng"; // Replace this
   //   const finnhubClient = new finnhub.DefaultApi();
 
-  //   // const request = require('request');
+  //   const request = require('request');
 
-  //   // request('https://finnhub.io/api/v1/quote?symbol=AAPL&token=sandbox_bv5814v48v6qnlld0dng', { json: true }, (err, res, body) => {
-  //   //   if (err) { return console.log(err); }
-  //   //   console.log(body);
-  //   // });    
+  //   request('https://finnhub.io/api/v1/quote?symbol=AAPL&token=sandbox_bv5814v48v6qnlld0dng', { json: true }, (err, res, body) => {
+  //     if (err) { return console.log(err); }
+  //     console.log(body);
+  //   });    
 
   //   const socket = new WebSocket('wss://ws.finnhub.io?token=bv5814v48v6qnlld0dn0');
 
@@ -80,6 +82,7 @@ class App extends React.Component {
   //   var unsubscribe = function(symbol) {
   //       socket.send(JSON.stringify({'type':'unsubscribe','symbol': symbol}))
   //   }
+  // }
 
 
   //   // // Stock candles
@@ -317,10 +320,12 @@ class App extends React.Component {
   render() {
     return (
       <div>
-        <h1>Search a stock!</h1>
+        <h1>Search a stock by its ticker symbol.</h1>
+        {/* {this.testApi()} */}
         <Autocomplete
             suggestions={this.state.allStocks}
         />
+
       </div>
     )
   }

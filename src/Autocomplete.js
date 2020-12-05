@@ -7,7 +7,7 @@ class Autocomplete extends Component {
   };
 
   static defaultProps = {
-    suggestions: []
+    suggestions: [],
   };
 
   constructor(props) {
@@ -21,9 +21,60 @@ class Autocomplete extends Component {
       // Whether or not the suggestion list is shown
       showSuggestions: false,
       // What the user has entered
-      userInput: ""
+      userInput: "",
+
+      showStockInfo: false,
+
+      currentPrice: 0
     };
   }
+
+ getAllStockInformation = (companySymbolCombo) => {
+
+    var currSymbol = null;
+    for (var i=companySymbolCombo.length-1; i>0; i--) {
+        if (companySymbolCombo.charAt(i) == "-") {
+            currSymbol = companySymbolCombo.substring(i+2, companySymbolCombo.length);
+        }
+    }
+    console.log(companySymbolCombo);
+    console.log(currSymbol);
+
+    const request = require('request');
+
+    request('https://finnhub.io/api/v1/quote?symbol='+currSymbol+'&token=sandbox_bv5814v48v6qnlld0dng', { json: true }, (err, res, body) => {
+      if (err) { return console.log(err); }
+      console.log(body.c);
+      this.setState({
+          currentPrice: body.c
+      })
+    });    
+
+//     const socket = new WebSocket('wss://ws.finnhub.io?token=bv5814v48v6qnlld0dn0');
+
+//   // Connection opened -> Subscribe
+//     socket.addEventListener('open', function (event) {
+//         // socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'AAPL'}))
+//         socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'AAPL'}))
+//         // socket.send(JSON.stringify({'type':'subscribe', 'symbol': 'IC MARKETS:1'}))
+//     });
+
+//     // Listen for messages
+//     socket.addEventListener('message', function (event) {
+//         console.log(event);
+//       var parsedData = JSON.parse(event.data);
+//       console.log(parsedData.data[0].p);
+//       this.setState({
+//         currentPrice: parsedData.data[0].p
+//       })
+//     }.bind(this));
+
+    // // Unsubscribe
+    // var unsubscribe = function(symbol) {
+    //     socket.send(JSON.stringify({'type':'unsubscribe','symbol': symbol}))
+    // }
+
+ }
 
   // Event fired when the input value is changed
   onChange = e => {
@@ -42,18 +93,23 @@ class Autocomplete extends Component {
       activeSuggestion: 0,
       filteredSuggestions,
       showSuggestions: true,
-      userInput: e.currentTarget.value
+      userInput: e.currentTarget.value,
+      showStockInfo: false
     });
   };
 
   // Event fired when the user clicks on a suggestion
   onClick = e => {
     // Update the user input and reset the rest of the state
+    console.log("Clicked");
+    this.getAllStockInformation(e.currentTarget.innerText);
+
     this.setState({
       activeSuggestion: 0,
       filteredSuggestions: [],
       showSuggestions: false,
-      userInput: e.currentTarget.innerText
+      userInput: e.currentTarget.innerText,
+      showStockInfo: true
     });
   };
 
@@ -64,11 +120,14 @@ class Autocomplete extends Component {
     // User pressed the enter key, update the input and close the
     // suggestions
     if (e.keyCode === 13) {
-      this.setState({
-        activeSuggestion: 0,
-        showSuggestions: false,
-        userInput: filteredSuggestions[activeSuggestion]
-      });
+        this.getAllStockInformation(filteredSuggestions[activeSuggestion]);
+        console.log("Key Down")
+        this.setState({
+            activeSuggestion: 0,
+            showSuggestions: false,
+            userInput: filteredSuggestions[activeSuggestion],
+            showStockInfo: true
+        });
     }
     // User pressed the up arrow, decrement the index
     else if (e.keyCode === 38) {
@@ -137,15 +196,21 @@ class Autocomplete extends Component {
     }
 
     return (
-      <Fragment>
-        <input
-          type="text"
-          onChange={onChange}
-          onKeyDown={onKeyDown}
-          value={userInput}
-        />
-        {suggestionsListComponent}
-      </Fragment>
+    <div>
+        <Fragment>
+            <input
+            type="text"
+            onChange={onChange}
+            onKeyDown={onKeyDown}
+            value={userInput}
+            />
+            {suggestionsListComponent}
+        </Fragment>
+        {this.state.showStockInfo && (
+            
+            <h1>${this.state.currentPrice}</h1>
+        )}
+      </div>
     );
   }
 }
